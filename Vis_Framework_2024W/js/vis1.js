@@ -52,7 +52,8 @@ function readFile(){
 
         let data = new Uint16Array(reader.result);
         volume = new Volume(data);
-
+        generateHistogram(volume.voxels);
+        console.log(volume.voxels)
         mipShader.setVolume(volume);
 
         resetVis();
@@ -97,3 +98,60 @@ function paint(){
         renderer.render(scene, camera);
     }
 }
+
+/**
+ * Draws the corresponding histogram in the div histogram
+ * @param voxelData the float array to be updated.
+ */
+function generateHistogram(voxelData) {
+    const container = d3.select("#histogram");
+    container.html('');  // Clear the container in case of previous histograms
+
+    const margin = {top: 10, right: 10, bottom: 30, left: 100},
+        width = 400 - margin.left - margin.right,
+        height = 300 - margin.top - margin.bottom;
+
+    // Append the SVG object to the container
+    const svg = container.append("svg")
+        .attr("width", width + margin.left + margin.right)
+        .attr("height", height + margin.top + margin.bottom)
+        .append("g")
+        .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+    // Set the scales
+    const x = d3.scaleLinear()
+        .domain([0,1])  // Assuming voxel data are non-negative
+        .range([0, width]);
+
+    const histogram = d3.histogram()
+        .value(d => d)
+        .domain(x.domain())
+        .thresholds(x.ticks(400));  // Adjust number of bins as needed
+
+    const bins = histogram(voxelData);
+
+    const y = d3.scaleLinear()
+        .domain([0, d3.max(bins, d => d.length)])
+        .range([height, 0]);
+
+    // Add the X axis
+    svg.append("g")
+        .attr("transform", "translate(0," + height + ")")
+        .call(d3.axisBottom(x));
+
+    // Add the Y axis
+    svg.append("g")
+        .call(d3.axisLeft(y));
+
+    // Add bars
+    svg.selectAll("rect")
+        .data(bins)
+        .enter()
+        .append("rect")
+        .attr("x", d => x(d.x0) + 1)
+        .attr("transform", d => "translate(0," + y(d.length) + ")")
+        .attr("width", d => Math.max(0, x(d.x1) - x(d.x0) - 1))
+        .attr("height", d => height - y(d.length))
+        .style("fill", "#ffffff");
+}
+
