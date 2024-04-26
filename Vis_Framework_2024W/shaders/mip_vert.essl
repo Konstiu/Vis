@@ -2,8 +2,8 @@
 #version 330 es
 #endif
 
-uniform vec3 volume_scale;
 uniform vec3 cameraPos;
+uniform vec3 volume_dims;
 
 
 out vec3 vEye;
@@ -12,7 +12,8 @@ out vec3 vDir;
 
 void main() {
     vEye = vec3(inverse(modelMatrix) * vec4(cameraPos, 1.0)).xyz;
-    vDir = (position - vEye);
+    vDir = position - vEye;
 
-    gl_Position = projectionMatrix * viewMatrix * modelMatrix * vec4(position, 1.0);
+    gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+
 }

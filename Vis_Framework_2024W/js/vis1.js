@@ -19,7 +19,7 @@ let canvasWidth, canvasHeight = 0;
 let container = null;
 let volume = null;
 let fileInput = null;
-let testShader = null;
+let mipShader = null;
 
 /**
  * Load all data and initialize UI here.
@@ -39,10 +39,7 @@ function init() {
     fileInput = document.getElementById("upload");
     fileInput.addEventListener('change', readFile);
 
-    // dummy shader gets a color as input
-    //testShader = new TestShader([255.0, 255.0, 255.0]);
-    mipShader = new MipShader([255.0, 0.0, 0.0, 255.0]);
-
+    mipShader = new MipShader();
 }
 
 /**
@@ -56,6 +53,8 @@ function readFile(){
         let data = new Uint16Array(reader.result);
         volume = new Volume(data);
 
+        mipShader.setVolume(volume);
+
         resetVis();
     };
     reader.readAsArrayBuffer(fileInput.files[0]);
@@ -64,34 +63,24 @@ function readFile(){
 /**
  * Construct the THREE.js scene and update histogram when a new volume is loaded by the user.
  *
- * Currently renders the bounding box of the volume.
  */
 async function resetVis(){
     // create new empty scene and perspective camera
     scene = new THREE.Scene();
     camera = new THREE.PerspectiveCamera( 75, canvasWidth / canvasHeight, 0.1, 1000 );
 
-    const texture = new THREE.Data3DTexture(volume.voxels, volume.width, volume.height, volume.depth);
-    texture.format = THREE.RedFormat;
-    texture.type = THREE.FloatType;
-    texture.minFilter = texture.magFilter = THREE.LinearFilter;
-    texture.unpackAlignment = 1;
-    texture.needsUpdate = true;
 
-    mipShader.setUniform("volume", texture);
-    mipShader.setUniform("volume_scale", new THREE.Vector3(volume.width/volume.max, volume.height/volume.max, volume.depth/volume.max));
-    mipShader.setUniform("volume_dims", new THREE.Vector3(volume.width, volume.height, volume.depth));
+    const cube = new THREE.BoxGeometry(volume.width, volume.height, volume.depth);
 
-    // dummy scene: we render a box and attach our color test shader as material
-    const testCube = new THREE.BoxGeometry(1, 1, 1);
-    const testMaterial = mipShader.material;
+    const material = mipShader.material;
     await mipShader.load(); // this function needs to be called explicitly, and only works within an async function!
-    const testMesh = new THREE.Mesh(testCube, testMaterial);
-    scene.add(testMesh);
+    const mesh = new THREE.Mesh(cube, material);
+    scene.add(mesh);
 
     // our camera orbits around an object centered at (0,0,0)
-    orbitCamera = new OrbitCamera(camera, new THREE.Vector3(0,0,0), 2, renderer.domElement);
+    orbitCamera = new OrbitCamera(camera, new THREE.Vector3(0,0,0), 2*volume.max, renderer.domElement);
 
+    console.log(camera.position);
 
 
     // init paint loop
