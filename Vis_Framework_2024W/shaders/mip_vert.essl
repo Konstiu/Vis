@@ -1,0 +1,18 @@
+#ifndef GL_ES
+#version 330 es
+#endif
+
+uniform vec3 volume_scale;
+uniform vec3 cameraPos;
+
+
+out vec3 vEye;
+out vec3 vDir;
+
+
+void main() {
+    vEye = vec3(inverse(modelMatrix) * vec4(cameraPos, 1.0)).xyz;
+    vDir = (position - vEye);
+
+    gl_Position = projectionMatrix * viewMatrix * modelMatrix * vec4(position, 1.0);
+}
