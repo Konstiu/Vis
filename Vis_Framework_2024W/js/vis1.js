@@ -14,6 +14,7 @@
  * @author Laura Luidolt
  * @author Diana Schalko
  */
+
 let renderer, camera, scene, orbitCamera;
 let canvasWidth, canvasHeight = 0;
 let container = null;
