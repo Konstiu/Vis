@@ -45,7 +45,7 @@ function init() {
 /**
  * Handles the file reader. No need to change anything here.
  */
-function readFile() {
+async function readFile() {
     let reader = new FileReader();
     reader.onloadend = function () {
         console.log("data loaded: ");
@@ -110,7 +110,8 @@ function generateHistogram(voxels) {
         width = 600 - margin.left - margin.right,
         height = 600 - margin.top - margin.bottom;
 
-    const svg = container.append("svg")
+    const svg = container.selectAll("svg").data([null]); // Update existing SVG if present
+    const svgEnter = svg.enter().append("svg")
         .attr("width", width + margin.left + margin.right)
         .attr("height", height + margin.top + margin.bottom)
         .append("g")
@@ -133,29 +134,56 @@ function generateHistogram(voxels) {
         length: b.length / maxCount
     }));
 
-    const y = d3.scaleLinear()
+    const y = d3.scalePow()
+        .exponent(0.25)
         .domain([0, 1])
         .range([height / 2, 0]);
 
-    const bars = svg.selectAll("rect")
-        .data(normalize);
+    const y2 = d3.scaleLinear()
+        .domain([0, 1])
+        .range([height / 2, 0]);
 
-    svg.append("g")
+    svgEnter.append("g")
+        .attr("class", "x-axis")
         .attr("transform", "translate(0," + (height / 2) + ")")
         .call(d3.axisBottom(x));
 
-    svg.append("g")
+    svgEnter.append("g")
+        .attr("class", "y-axis")
         .attr("transform", "translate(0," + 0 + ")")
-        .call(d3.axisLeft(y));
+        .call(d3.axisLeft(y2));
 
-    svg.selectAll("rect")
-        .data(normalize)
-        .enter()
+    const bars = svg.merge(svgEnter).selectAll("rect")
+        .data(normalize);
+
+    // Enter
+    bars.enter()
         .append("rect")
         .attr("x", d => x(d.x0) + 1)
         .attr("y", height / 2)
         .attr("width", d => Math.max(0, x(d.x1) - x(d.x0) - 1))
-        .attr("height", d => ((height / 2) - y(d.length)))
+        .attr("height", 0)
         .style("fill", "#ffffff")
-        .style("opacity", 0.5);
+        .style("opacity", 0.5)
+        .transition()
+        .duration(500)
+        .attr("y", height/2)
+        .attr("height", d => height / 2 - y(d.length));
+
+    // Update
+    bars.transition()
+        .duration(500)
+        .attr("x", d => x(d.x0) + 1)
+        .attr("width", d => Math.max(0, x(d.x1) - x(d.x0) - 1))
+        .attr("y", height/2)
+        .attr("height", d => height / 2 - y(d.length));
+
+    // Exit
+    bars.exit()
+        .transition()
+        .duration(500)
+        .attr("y", height / 2)
+        .attr("height", 0)
+        .remove();
 }
+
