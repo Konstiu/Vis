@@ -32,8 +32,8 @@ function init() {
 
     // WebGL renderer
     renderer = new THREE.WebGLRenderer();
-    renderer.setSize( canvasWidth, canvasHeight );
-    container.appendChild( renderer.domElement );
+    renderer.setSize(canvasWidth, canvasHeight);
+    container.appendChild(renderer.domElement);
 
     // read and parse volume file
     fileInput = document.getElementById("upload");
@@ -45,7 +45,7 @@ function init() {
 /**
  * Handles the file reader. No need to change anything here.
  */
-function readFile(){
+function readFile() {
     let reader = new FileReader();
     reader.onloadend = function () {
         console.log("data loaded: ");
@@ -53,7 +53,6 @@ function readFile(){
         let data = new Uint16Array(reader.result);
         volume = new Volume(data);
         generateHistogram(volume.voxels);
-        console.log(volume.voxels)
         mipShader.setVolume(volume);
 
         resetVis();
@@ -65,10 +64,10 @@ function readFile(){
  * Construct the THREE.js scene and update histogram when a new volume is loaded by the user.
  *
  */
-async function resetVis(){
+async function resetVis() {
     // create new empty scene and perspective camera
     scene = new THREE.Scene();
-    camera = new THREE.PerspectiveCamera( 75, canvasWidth / canvasHeight, 0.1, 1000 );
+    camera = new THREE.PerspectiveCamera(75, canvasWidth / canvasHeight, 0.1, 1000);
 
 
     const cube = new THREE.BoxGeometry(volume.width, volume.height, volume.depth);
@@ -79,7 +78,7 @@ async function resetVis(){
     scene.add(mesh);
 
     // our camera orbits around an object centered at (0,0,0)
-    orbitCamera = new OrbitCamera(camera, new THREE.Vector3(0,0,0), 2*volume.max, renderer.domElement);
+    orbitCamera = new OrbitCamera(camera, new THREE.Vector3(0, 0, 0), 2 * volume.max, renderer.domElement);
 
     console.log(camera.position);
 
@@ -91,7 +90,7 @@ async function resetVis(){
 /**
  * Render the scene and update all necessary shader information.
  */
-function paint(){
+function paint() {
     if (volume) {
         mipShader.setUniform("cameraPos", camera.position);
 
@@ -99,59 +98,64 @@ function paint(){
     }
 }
 
+
 /**
  * Draws the corresponding histogram in the div histogram
- * @param voxelData the float array to be updated.
+ * @param voxels the float array to be updated.
  */
-function generateHistogram(voxelData) {
+function generateHistogram(voxels) {
     const container = d3.select("#histogram");
-    container.html('');  // Clear the container in case of previous histograms
 
-    const margin = {top: 10, right: 10, bottom: 30, left: 100},
-        width = 400 - margin.left - margin.right,
-        height = 300 - margin.top - margin.bottom;
+    const margin = {top: 10, right: 10, bottom: 0, left: 30},
+        width = 600 - margin.left - margin.right,
+        height = 600 - margin.top - margin.bottom;
 
-    // Append the SVG object to the container
     const svg = container.append("svg")
         .attr("width", width + margin.left + margin.right)
         .attr("height", height + margin.top + margin.bottom)
         .append("g")
         .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
-    // Set the scales
     const x = d3.scaleLinear()
-        .domain([0,1])  // Assuming voxel data are non-negative
+        .domain([0, 1])
         .range([0, width]);
 
     const histogram = d3.histogram()
         .value(d => d)
         .domain(x.domain())
-        .thresholds(x.ticks(400));  // Adjust number of bins as needed
+        .thresholds(x.ticks(100));
 
-    const bins = histogram(voxelData);
+    const bins = histogram(voxels);
+    const maxCount = d3.max(bins, d => d.length);
+
+    const normalize = bins.map(b => ({
+        ...b,
+        length: b.length / maxCount
+    }));
 
     const y = d3.scaleLinear()
-        .domain([0, d3.max(bins, d => d.length)])
-        .range([height, 0]);
+        .domain([0, 1])
+        .range([height / 2, 0]);
 
-    // Add the X axis
+    const bars = svg.selectAll("rect")
+        .data(normalize);
+
     svg.append("g")
-        .attr("transform", "translate(0," + height + ")")
+        .attr("transform", "translate(0," + (height / 2) + ")")
         .call(d3.axisBottom(x));
 
-    // Add the Y axis
     svg.append("g")
+        .attr("transform", "translate(0," + 0 + ")")
         .call(d3.axisLeft(y));
 
-    // Add bars
     svg.selectAll("rect")
-        .data(bins)
+        .data(normalize)
         .enter()
         .append("rect")
         .attr("x", d => x(d.x0) + 1)
-        .attr("transform", d => "translate(0," + y(d.length) + ")")
+        .attr("y", height / 2)
         .attr("width", d => Math.max(0, x(d.x1) - x(d.x0) - 1))
-        .attr("height", d => height - y(d.length))
-        .style("fill", "#ffffff");
+        .attr("height", d => ((height / 2) - y(d.length)))
+        .style("fill", "#ffffff")
+        .style("opacity", 0.5);
 }
-
