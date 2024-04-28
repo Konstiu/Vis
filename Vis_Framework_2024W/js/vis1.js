@@ -139,6 +139,36 @@ function generateHistogram(voxels) {
         .domain([0, 1])
         .range([height / 2, 0]);
 
+    const line = svgEnter.append("line")
+        .attr("x1", (width/2))
+        .attr("x2", (width/2))
+        .attr("y1", 0)
+        .attr("y2", height/2)
+        .style("stroke", "#ffffff")
+        .style("stroke-width", "2px")
+        .style("cursor", "pointer");
+
+
+    const ball = svgEnter.append("circle")
+        .attr("cx", (width/2))
+        .attr("cy", 0)
+        .attr("r", 10)
+        .style("fill", "#ffffff")
+        .style("stroke-width", "2px")
+        .style("cursor", "pointer");
+
+    const dragLine = d3.drag()
+        .on("drag", function(event) {
+            const newX = Math.max(0, Math.min(width, event.x));
+            line.attr("x1", newX)
+                .attr("x2", newX);
+            ball.attr("cx", newX);
+        });
+
+    line.call(dragLine);
+    ball.call(dragLine);
+
+
     svgEnter.append("text")
         .attr("x", (-45))
         .attr("y", -40)
