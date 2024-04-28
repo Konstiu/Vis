@@ -160,9 +160,13 @@ function generateHistogram(voxels) {
     const dragLine = d3.drag()
         .on("drag", function(event) {
             const newX = Math.max(0, Math.min(width, event.x));
+            const newY = Math.max(0, Math.min(height/2, event.y));
             line.attr("x1", newX)
-                .attr("x2", newX);
-            ball.attr("cx", newX);
+                .attr("x2", newX)
+                .attr("y1", newY)
+                .attr("y2", height/2);
+            ball.attr("cx", newX)
+                .attr("cy", newY);
         });
 
     line.call(dragLine);
