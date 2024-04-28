@@ -104,9 +104,9 @@ function paint() {
  * @param voxels the float array to be updated.
  */
 function generateHistogram(voxels) {
-    const container = d3.select("#histogram");
+    const container = d3.select("#tfContainer");
 
-    const margin = {top: 10, right: 10, bottom: 0, left: 30},
+    const margin = {top: 10, right: 10, bottom: 0, left: 50},
         width = 600 - margin.left - margin.right,
         height = 600 - margin.top - margin.bottom;
 
@@ -138,6 +138,19 @@ function generateHistogram(voxels) {
         .exponent(0.25)
         .domain([0, 1])
         .range([height / 2, 0]);
+
+    svgEnter.append("text")
+        .attr("x", (-45))
+        .attr("y", -40)
+        .text("intensity")
+        .style("fill", "#ffffff")
+        .attr("transform", "rotate(-90, 0, 0)");
+
+    svgEnter.append("text")
+        .attr("x", (width-40))
+        .attr("y", height/2 + 40)
+        .text("density")
+        .style("fill", "#ffffff");
 
     const y2 = d3.scaleLinear()
         .domain([0, 1])
