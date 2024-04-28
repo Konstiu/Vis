@@ -157,6 +157,8 @@ function generateHistogram(voxels) {
         .style("stroke-width", "2px")
         .style("cursor", "pointer");
 
+    let intensity = 0;
+    let density = 0;
     const dragLine = d3.drag()
         .on("drag", function(event) {
             const newX = Math.max(0, Math.min(width, event.x));
@@ -167,10 +169,14 @@ function generateHistogram(voxels) {
                 .attr("y2", height/2);
             ball.attr("cx", newX)
                 .attr("cy", newY);
+
+            density = line.node().getAttribute("x1") / width;
+            intensity = line.node().getAttribute("y1") / (height/2) * -1 + 1;
         });
 
     line.call(dragLine);
     ball.call(dragLine);
+
 
 
     svgEnter.append("text")
