@@ -3,8 +3,14 @@
 class MipShader extends Shader {
     constructor() {
         super("mip_vert", "mip_frag");
+        this.setSteps(200);
     }
 
+    /**
+     * Creates the 3D Texture and also sets all needed uniforms for rendering
+     *
+     * @param volume volume to render
+     */
     setVolume(volume) {
         const texture = new THREE.Data3DTexture(volume.voxels, volume.width, volume.height, volume.depth);
         texture.format = THREE.RedFormat;
@@ -15,8 +21,13 @@ class MipShader extends Shader {
 
         this.setUniform("volume", texture);
         this.setUniform("volume_dims", new THREE.Vector3(volume.width, volume.height, volume.depth));
-        this.setUniform("volume_scale", new THREE.Vector3(volume.width/volume.max, volume.height/volume.max, volume.depth/volume.max));
+    }
 
-
+    /**
+     * Sets the resolution of the rendering
+     * @param steps > 1
+     */
+    setSteps(steps) {
+        this.setUniform("steps", steps);
     }
 }

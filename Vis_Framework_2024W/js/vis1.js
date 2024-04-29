@@ -39,6 +39,7 @@ function init() {
     fileInput = document.getElementById("upload");
     fileInput.addEventListener('change', readFile);
 
+    // create new maximum intensity projection shader
     mipShader = new MipShader();
 }
 
@@ -53,7 +54,10 @@ async function readFile() {
         let data = new Uint16Array(reader.result);
         volume = new Volume(data);
         generateHistogram(volume.voxels);
+
+        // set shader data
         mipShader.setVolume(volume);
+        mipShader.setSteps(300);
 
         resetVis();
     };
@@ -70,18 +74,14 @@ async function resetVis() {
     camera = new THREE.PerspectiveCamera(75, canvasWidth / canvasHeight, 0.1, 1000);
 
 
-    const cube = new THREE.BoxGeometry(volume.width, volume.height, volume.depth);
-
+    const boundingBox = new THREE.BoxGeometry(volume.width, volume.height, volume.depth); // create bounding box in which we render the volume
     const material = mipShader.material;
     await mipShader.load(); // this function needs to be called explicitly, and only works within an async function!
-    const mesh = new THREE.Mesh(cube, material);
+    const mesh = new THREE.Mesh(boundingBox, material);
     scene.add(mesh);
 
     // our camera orbits around an object centered at (0,0,0)
     orbitCamera = new OrbitCamera(camera, new THREE.Vector3(0, 0, 0), 2 * volume.max, renderer.domElement);
-
-    console.log(camera.position);
-
 
     // init paint loop
     requestAnimationFrame(paint);
@@ -92,8 +92,6 @@ async function resetVis() {
  */
 function paint() {
     if (volume) {
-        mipShader.setUniform("cameraPos", camera.position);
-
         renderer.render(scene, camera);
     }
 }
