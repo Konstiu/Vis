@@ -103,138 +103,100 @@ function paint() {
  */
 function generateHistogram(voxels) {
     const container = d3.select("#tfContainer");
+    const width = 500;
+    const margin = {top: 10, right: 30, bottom: 40, left: 40};
+    const adjWidth = width - margin.left - margin.right;
+    const adjHeight = adjWidth / 2;
 
-    const margin = {top: 10, right: 10, bottom: 0, left: 50},
-        width = 600 - margin.left - margin.right,
-        height = 600 - margin.top - margin.bottom;
+    // Check if the SVG already exists, create it if not
+    let svg = container.select('svg');
+    if (svg.empty()) {
+        svg = container.append('svg')
+            .attr('width', '100%')
+            .attr('height', '100%')
+            .append('g')
+            .attr('transform', `translate(${margin.left},${margin.top})`);
 
-    const svg = container.selectAll("svg").data([null]); // Update existing SVG if present
-    const svgEnter = svg.enter().append("svg")
-        .attr("width", width + margin.left + margin.right)
-        .attr("height", height + margin.top + margin.bottom)
-        .append("g")
-        .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+        // Initial x-axis
+        svg.append('g')
+            .attr('class', 'x-axis')
+            .attr('transform', `translate(0,${adjHeight})`);
 
-    const x = d3.scaleLinear()
-        .domain([0, 1])
-        .range([0, width]);
+        // Initial y-axis
+        svg.append('g')
+            .attr('class', 'y-axis');
+    }
 
-    const histogram = d3.histogram()
+    // Setup the x-axis scale
+    const xScale = d3.scaleLinear()
+        .domain([0, 1]) // Adjust based on your actual data needs
+        .range([0, adjWidth]);
+
+    // Histogram function to compute the bins
+    let histogram = d3.histogram()
         .value(d => d)
-        .domain(x.domain())
-        .thresholds(x.ticks(100));
+        .domain(xScale.domain())
+        .thresholds(xScale.ticks(100));
 
-    const bins = histogram(voxels);
-    const maxCount = d3.max(bins, d => d.length);
+    let bins = histogram(voxels);
 
-    const normalize = bins.map(b => ({
-        ...b,
-        length: b.length / maxCount
-    }));
+    // Setup the y-axis scale
+    const yScale = d3.scaleLinear()
+        .domain([0, 1])
+        .range([adjHeight, 0]);
 
-    const y = d3.scalePow()
+    // Update the axes
+    svg.select('.x-axis').call(d3.axisBottom(xScale));
+    svg.select('.y-axis').call(d3.axisLeft(yScale));
+
+    // Adding labels to the axes
+    svg.select('.x-axis').append('text')
+        .attr('class', 'x-axis-label')
+        .attr('text-anchor', 'end')
+        .attr('x', adjWidth)
+        .attr('y', -6)
+        .text('Density')
+        .attr('fill', 'white');
+
+    svg.select('.y-axis').append('text')
+        .attr('class', 'y-axis-label')
+        .attr('text-anchor', 'end')
+        .attr('transform', 'rotate(-90)')
+        .attr('y', 6)
+        .attr('dy', '.75em')
+        .text('Intensity')
+        .attr('fill', 'white');
+
+    // Select all bars and bind data
+    var bars = svg.selectAll('rect')
+        .data(bins);
+
+    // y-scale down for the histogram data
+    const yScaleDown = d3.scalePow()
         .exponent(0.25)
-        .domain([0, 1])
-        .range([height / 2, 0]);
+        .domain([0, d3.max(bins, d => d.length) * 1.5])
+        .range([0, adjHeight]);
 
-    const line = svgEnter.append("line")
-        .attr("x1", (width/2))
-        .attr("x2", (width/2))
-        .attr("y1", 0)
-        .attr("y2", height/2)
-        .style("stroke", "#ffffff")
-        .style("stroke-width", "2px")
-        .style("cursor", "pointer");
+    // Enter selection
+    bars.enter().append('rect')
+        .attr('x', d => xScale(d.x0))
+        .attr('y', adjHeight)
+        .attr('width', d => Math.max(0, xScale(d.x1) - xScale(d.x0) - 1))
+        .attr('height', 0) // Start with height 0 for transition
+        .style('fill', 'white')
+        .merge(bars) // Merge enter and update selections
+        .transition() // Start a transition to animate new changes
+        .duration(750) // Transition time of 750ms
+        .attr('y', d => adjHeight)
+        .attr('height', d => yScaleDown(d.length));
 
-
-    const ball = svgEnter.append("circle")
-        .attr("cx", (width/2))
-        .attr("cy", 0)
-        .attr("r", 10)
-        .style("fill", "#ffffff")
-        .style("stroke-width", "2px")
-        .style("cursor", "pointer");
-
-    let intensity = 0;
-    let density = 0;
-    const dragLine = d3.drag()
-        .on("drag", function(event) {
-            const newX = Math.max(0, Math.min(width, event.x));
-            const newY = Math.max(0, Math.min(height/2, event.y));
-            line.attr("x1", newX)
-                .attr("x2", newX)
-                .attr("y1", newY)
-                .attr("y2", height/2);
-            ball.attr("cx", newX)
-                .attr("cy", newY);
-
-            density = line.node().getAttribute("x1") / width;
-            intensity = line.node().getAttribute("y1") / (height/2) * -1 + 1;
-        });
-
-    line.call(dragLine);
-    ball.call(dragLine);
-
-
-
-    svgEnter.append("text")
-        .attr("x", (-45))
-        .attr("y", -40)
-        .text("intensity")
-        .style("fill", "#ffffff")
-        .attr("transform", "rotate(-90, 0, 0)");
-
-    svgEnter.append("text")
-        .attr("x", (width-40))
-        .attr("y", height/2 + 40)
-        .text("density")
-        .style("fill", "#ffffff");
-
-    const y2 = d3.scaleLinear()
-        .domain([0, 1])
-        .range([height / 2, 0]);
-
-    svgEnter.append("g")
-        .attr("class", "x-axis")
-        .attr("transform", "translate(0," + (height / 2) + ")")
-        .call(d3.axisBottom(x));
-
-    svgEnter.append("g")
-        .attr("class", "y-axis")
-        .attr("transform", "translate(0," + 0 + ")")
-        .call(d3.axisLeft(y2));
-
-    const bars = svg.merge(svgEnter).selectAll("rect")
-        .data(normalize);
-
-    // Enter
-    bars.enter()
-        .append("rect")
-        .attr("x", d => x(d.x0) + 1)
-        .attr("y", height / 2)
-        .attr("width", d => Math.max(0, x(d.x1) - x(d.x0) - 1))
-        .attr("height", 0)
-        .style("fill", "#ffffff")
-        .style("opacity", 0.5)
-        .transition()
-        .duration(500)
-        .attr("y", height/2)
-        .attr("height", d => height / 2 - y(d.length));
-
-    // Update
-    bars.transition()
-        .duration(500)
-        .attr("x", d => x(d.x0) + 1)
-        .attr("width", d => Math.max(0, x(d.x1) - x(d.x0) - 1))
-        .attr("y", height/2)
-        .attr("height", d => height / 2 - y(d.length));
-
-    // Exit
+    // Exit transition
     bars.exit()
         .transition()
-        .duration(500)
-        .attr("y", height / 2)
-        .attr("height", 0)
+        .duration(750)
+        .attr('y', adjHeight)
+        .attr('height', 0)
         .remove();
+
 }
 
