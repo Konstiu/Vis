@@ -209,7 +209,7 @@ function generateHistogram(voxels) {
         .attr('fill', 'white');
 
     // Select all bars and bind data
-    var bars = svg.selectAll('rect')
+    let bars = svg.selectAll('rect')
         .data(bins);
 
     // y-scale down for the histogram data
