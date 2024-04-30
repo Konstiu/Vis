@@ -188,7 +188,8 @@ function generateHistogram(voxels) {
         .transition() // Start a transition to animate new changes
         .duration(750) // Transition time of 750ms
         .attr('y', d => adjHeight)
-        .attr('height', d => yScaleDown(d.length));
+        .attr('height', d => yScaleDown(d.length))
+        .style('opacity', 0.6);
 
     // Exit transition
     bars.exit()
