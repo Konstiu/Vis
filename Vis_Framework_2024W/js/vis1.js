@@ -104,9 +104,14 @@ function paint() {
 function generateHistogram(voxels) {
     const container = d3.select("#tfContainer");
     const width = 500;
+    const height = width/2;
     const margin = {top: 10, right: 30, bottom: 40, left: 40};
     const adjWidth = width - margin.left - margin.right;
-    const adjHeight = adjWidth / 2;
+    const adjHeight = height - margin.top - margin.bottom;
+
+    // for task 3
+    let intensity = 0;
+    let density = 0;
 
     // Check if the SVG already exists, create it if not
     let svg = container.select('svg');
@@ -125,6 +130,42 @@ function generateHistogram(voxels) {
         // Initial y-axis
         svg.append('g')
             .attr('class', 'y-axis');
+
+        const line = svg.append("line")
+            .attr("x1", (adjWidth/2))
+            .attr("x2", (adjWidth/2))
+            .attr("y1", 0)
+            .attr("y2", adjHeight)
+            .style("stroke", "#ffffff")
+            .style("stroke-width", "2px")
+            .style("cursor", "pointer");
+
+
+        const ball = svg.append("circle")
+            .attr("cx", (adjWidth/2))
+            .attr("cy", 0)
+            .attr("r", 10)
+            .style("fill", "#ffffff")
+            .style("stroke-width", "2px")
+            .style("cursor", "pointer");
+
+        const dragLine = d3.drag()
+            .on("drag", function(event) {
+                const newX = Math.max(0, Math.min(adjWidth, event.x));
+                const newY = Math.max(0, Math.min(adjHeight, event.y));
+                line.attr("x1", newX)
+                    .attr("x2", newX)
+                    .attr("y1", newY)
+                    .attr("y2", adjHeight);
+                ball.attr("cx", newX)
+                    .attr("cy", newY);
+
+                density = line.node().getAttribute("x1") / adjWidth;
+                intensity = line.node().getAttribute("y1") / (adjHeight) * -1 + 1;
+            });
+
+        line.call(dragLine);
+        ball.call(dragLine);
     }
 
     // Setup the x-axis scale
@@ -154,7 +195,7 @@ function generateHistogram(voxels) {
         .attr('class', 'x-axis-label')
         .attr('text-anchor', 'end')
         .attr('x', adjWidth)
-        .attr('y', -6)
+        .attr('y', 40)
         .text('Density')
         .attr('fill', 'white');
 
@@ -162,7 +203,7 @@ function generateHistogram(voxels) {
         .attr('class', 'y-axis-label')
         .attr('text-anchor', 'end')
         .attr('transform', 'rotate(-90)')
-        .attr('y', 6)
+        .attr('y', -40)
         .attr('dy', '.75em')
         .text('Intensity')
         .attr('fill', 'white');
@@ -187,9 +228,9 @@ function generateHistogram(voxels) {
         .merge(bars) // Merge enter and update selections
         .transition() // Start a transition to animate new changes
         .duration(750) // Transition time of 750ms
-        .attr('y', d => adjHeight)
+        .attr('y', adjHeight)
         .attr('height', d => yScaleDown(d.length))
-        .style('opacity', 0.6);
+        .style('opacity', 0.4);
 
     // Exit transition
     bars.exit()
