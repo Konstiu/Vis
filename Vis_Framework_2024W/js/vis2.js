@@ -51,9 +51,8 @@ function init() {
     colorInput.addEventListener("input", function(){
         var theColor = colorInput.value;
         let rgb = hexToRgb(theColor);
-        console.log(rgb);
-        firstHitShader.setColor(new THREE.Vector3(rgb.r/255, rgb.g/255, rgb.b/255));
-        //firstHitShader.setColor()
+        firstHitShader.setSurfaceColor(new THREE.Vector3(rgb.r/255, rgb.g/255, rgb.b/255));
+        paint();
     }, false);
 }
 
@@ -123,7 +122,6 @@ async function resetVis() {
  */
 function paint() {
     if (volume) {
-        console.log(density)
         renderer.render(scene, camera);
     }
 }

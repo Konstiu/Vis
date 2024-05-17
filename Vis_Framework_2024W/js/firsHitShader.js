@@ -30,9 +30,9 @@ class FirstHitShader extends Shader {
         this.setUniform("gradient", gradient_texture);
 
         this.setUniform("volume", texture);
-        this.setUniform("volume_dims", new THREE.Vector3(volume.width, volume.height, volume.depth));
+        this.setUniform("volume_scale", volume.scale);
         this.setUniform("iso_value", 0.3);
-        this.setUniform("color", new THREE.Vector4(1, 1, 1));
+        this.setUniform("surface_color", new THREE.Vector4(1, 1, 1));
     }
 
     /**
@@ -47,7 +47,7 @@ class FirstHitShader extends Shader {
         this.setUniform("iso_value", density);
     }
 
-    setColor(color){
-        this.setUniform("color", color);
+    setSurfaceColor(color){
+        this.setUniform("surface_color", color);
     }
 }
