@@ -20,6 +20,8 @@ let container = null;
 let volume = null;
 let fileInput = null;
 let firstHitShader = null;
+let density = 0.3;
+let intensity = 1.0;
 
 /**
  * Load all data and initialize UI here.
@@ -41,6 +43,35 @@ function init() {
 
     // create new maximum intensity projection shader
     firstHitShader = new FirstHitShader();
+
+
+    // color changing
+    var colorInput = document.getElementById("surfaceColor");
+
+    colorInput.addEventListener("input", function(){
+        var theColor = colorInput.value;
+        let rgb = hexToRgb(theColor);
+        console.log(rgb);
+        firstHitShader.setColor(new THREE.Vector3(rgb.r/255, rgb.g/255, rgb.b/255));
+        //firstHitShader.setColor()
+    }, false);
+}
+
+function hexToRgb(hex) {
+    // Remove the leading #
+    hex = hex.replace(/^#/, '');
+
+    // Convert 3-digit hex to 6-digit hex
+    if (hex.length === 3) {
+        hex = hex.split('').map(hexChar => hexChar + hexChar).join('');
+    }
+
+    const bigint = parseInt(hex, 16);
+    const r = (bigint >> 16) & 255;
+    const g = (bigint >> 8) & 255;
+    const b = bigint & 255;
+
+    return { r, g, b };
 }
 
 /**
@@ -92,6 +123,7 @@ async function resetVis() {
  */
 function paint() {
     if (volume) {
+        console.log(density)
         renderer.render(scene, camera);
     }
 }
@@ -109,9 +141,6 @@ function generateHistogram(voxels) {
     const adjWidth = width - margin.left - margin.right;
     const adjHeight = height - margin.top - margin.bottom;
 
-    // for task 3
-    let intensity = 0;
-    let density = 0;
 
     // Check if the SVG already exists, create it if not
     let svg = container.select('svg');
@@ -162,6 +191,8 @@ function generateHistogram(voxels) {
 
                 density = line.node().getAttribute("x1") / adjWidth;
                 intensity = line.node().getAttribute("y1") / (adjHeight) * -1 + 1;
+                firstHitShader.setIsoVal(density);
+                paint();
             });
 
         line.call(dragLine);
