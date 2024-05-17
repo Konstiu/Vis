@@ -32,4 +32,41 @@ class Volume {
         console.log(this.voxels.length + " voxels loaded - ["
             + this.width + ", " + this.height + ", " + this.depth + "], max: " + this.max);
     }
+
+
+    calcGradient() {
+        let gradient = [];
+        for (let z = 0; z < this.depth; z++) {
+            for (let y = 0; y < this.height; y++) {
+                for (let x = 0; x < this.width; x++) {
+                    let gx = 0.0;
+                    let gy = 0.0;
+                    let gz = 0.0;
+                    if (x > 0 && x < this.width - 1) {
+                        gx = this.voxels[x + 1 + y * this.width + z * this.slice] - this.voxels[x - 1 + y * this.width + z * this.slice];
+                    }
+                    if (y > 0 && y < this.height - 1) {
+                        gy = this.voxels[x + (y + 1) * this.width + z * this.slice] - this.voxels[x + (y - 1) * this.width + z * this.slice];
+                    }
+                    if (z > 0 && z < this.depth - 1) {
+                        gz = this.voxels[x + y * this.width + (z + 1) * this.slice] - this.voxels[x + y * this.width + (z - 1) * this.slice];
+                    }
+
+                    let factor = 1.0;
+
+                    gradient.push(gx * factor);
+                    gradient.push(gy * factor);
+                    gradient.push(gz * factor);
+                    gradient.push(1.0);
+
+                    // let result = new THREE.Vector3(gx * 255.0, gy * 255.0, gz * 255.0);
+                    // result = result *  (new THREE.Vector3(255.0));
+                    // gradient.push(result);
+
+                }
+            }
+        }
+
+        return Float32Array.from(gradient);
+    }
 }
