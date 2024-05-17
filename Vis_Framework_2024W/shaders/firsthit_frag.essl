@@ -24,15 +24,15 @@ vec2 intersect_box(vec3 orig, vec3 dir) {
     vec3 box_min = vec3(-0.5);
     vec3 box_max = vec3(0.5);
 
-	vec3 inv_dir = 1.0 / dir; // for efficiency reasons
+    vec3 inv_dir = 1.0 / dir; // for efficiency reasons
 
-	vec3 tmin_tmp = (box_min - orig) * inv_dir;
-	vec3 tmax_tmp = (box_max - orig) * inv_dir;
-	vec3 tmin = min(tmin_tmp, tmax_tmp);
-	vec3 tmax = max(tmin_tmp, tmax_tmp);
-	float t0 = max(tmin.x, max(tmin.y, tmin.z));
-	float t1 = min(tmax.x, min(tmax.y, tmax.z));
-	return vec2(t0, t1);
+    vec3 tmin_tmp = (box_min - orig) * inv_dir;
+    vec3 tmax_tmp = (box_max - orig) * inv_dir;
+    vec3 tmin = min(tmin_tmp, tmax_tmp);
+    vec3 tmax = max(tmin_tmp, tmax_tmp);
+    float t0 = max(tmin.x, max(tmin.y, tmin.z));
+    float t1 = min(tmax.x, min(tmax.y, tmax.z));
+    return vec2(t0, t1);
 }
 
 void main() {
@@ -54,17 +54,37 @@ void main() {
     float prev_value = 0.0;
 
     for (float t = bounds.x; t < bounds.y; t += delta) {
-        float d = texture(volume, p-vec3(-0.5)).r;
+        float d = texture(volume, p - vec3(-0.5)).r;
 
         if (d > iso_value && iso_value > prev_value) {
-             vec3 intersection_point = mix(prev_pos, p, (iso_value - prev_value) / (d - prev_value));
+            vec3 intersection_point = mix(prev_pos, p, (iso_value - prev_value) / (d - prev_value));
 
-             vec4 gradient_color = texture(gradient, intersection_point-vec3(-0.5)).rgba;
+            vec4 gradient_color = texture(gradient, intersection_point - vec3(-0.5)).rgba;
+            vec3 normal = normalize(gradient_color.rgb);
 
-             fragColor =  gradient_color;//vec4(vec3(gradient_color), 1.0); //vec4(intersection_point, 1.0);
-             break;
+            // Blinn-Phong shading parameters
+            vec3 lightDir = normalize(vec3(1.0, 1.0, 1.0)); // Light direction
+            vec3 viewDir = normalize(vEye - intersection_point); // View direction
+            vec3 halfwayDir = normalize(lightDir + viewDir); // Halfway vector
+
+            // Blinn-Phong shading components
+            float ambientStrength = 0.2;
+            vec3 ambient = ambientStrength * vec3(1.0);
+
+            float diff = max(dot(normal, lightDir), 0.0);
+            vec3 diffuse = diff * vec3(1.0);
+
+            float specularStrength = 0.5;
+            float shininess = 32.0;
+            float spec = pow(max(dot(normal, halfwayDir), 0.0), shininess);
+            vec3 specular = specularStrength * spec * vec3(1.0);
+
+            vec3 lighting = ambient + diffuse + specular;
+
+            // Final color is white with the calculated lighting
+            fragColor = vec4(lighting, 1.0);
+            break;
         }
-
 
         prev_value = d;
         prev_pos = p;

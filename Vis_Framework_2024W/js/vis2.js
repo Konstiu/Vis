@@ -57,7 +57,7 @@ async function readFile() {
 
         // set shader data
         firstHitShader.setVolume(volume);
-        firstHitShader.setSteps(300);
+        firstHitShader.setSteps(200);
 
         resetVis();
     };
