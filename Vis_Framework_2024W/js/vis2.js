@@ -22,6 +22,8 @@ let fileInput = null;
 let firstHitShader = null;
 let density = 0.3;
 let intensity = 1.0;
+let theColor = "#ffffff";
+let density_and_intensity_values = [[-1.0, -1.0, theColor], [-1.0, -1.0, theColor], [-1.0, -1.0, theColor], [-1.0, -1.0, theColor], [-1.0, -1.0, theColor]];
 
 /**
  * Load all data and initialize UI here.
@@ -44,14 +46,17 @@ function init() {
     // create new maximum intensity projection shader
     firstHitShader = new FirstHitShader();
 
-
+    buttonpress();
+    list();
+    addEventListeners();
+    updateDisplay();
     // color changing
     var colorInput = document.getElementById("surfaceColor");
 
-    colorInput.addEventListener("input", function(){
-        var theColor = colorInput.value;
+    colorInput.addEventListener("input", function () {
+        theColor = colorInput.value;
         let rgb = hexToRgb(theColor);
-        firstHitShader.setSurfaceColor(new THREE.Vector3(rgb.r/255, rgb.g/255, rgb.b/255));
+        firstHitShader.setSurfaceColor(new THREE.Vector3(rgb.r / 255, rgb.g / 255, rgb.b / 255));
         paint();
     }, false);
 }
@@ -70,7 +75,7 @@ function hexToRgb(hex) {
     const g = (bigint >> 8) & 255;
     const b = bigint & 255;
 
-    return { r, g, b };
+    return {r, g, b};
 }
 
 /**
@@ -134,7 +139,7 @@ function paint() {
 function generateHistogram(voxels) {
     const container = d3.select("#tfContainer");
     const width = 500;
-    const height = width/2;
+    const height = width / 2;
     const margin = {top: 10, right: 30, bottom: 40, left: 40};
     const adjWidth = width - margin.left - margin.right;
     const adjHeight = height - margin.top - margin.bottom;
@@ -159,8 +164,8 @@ function generateHistogram(voxels) {
             .attr('class', 'y-axis');
 
         const line = svg.append("line")
-            .attr("x1", (adjWidth/2))
-            .attr("x2", (adjWidth/2))
+            .attr("x1", (adjWidth / 2))
+            .attr("x2", (adjWidth / 2))
             .attr("y1", 0)
             .attr("y2", adjHeight)
             .style("stroke", "#ffffff")
@@ -169,7 +174,7 @@ function generateHistogram(voxels) {
 
 
         const ball = svg.append("circle")
-            .attr("cx", (adjWidth/2))
+            .attr("cx", (adjWidth / 2))
             .attr("cy", 0)
             .attr("r", 10)
             .style("fill", "#ffffff")
@@ -177,7 +182,7 @@ function generateHistogram(voxels) {
             .style("cursor", "pointer");
 
         const dragLine = d3.drag()
-            .on("drag", function(event) {
+            .on("drag", function (event) {
                 const newX = Math.max(0, Math.min(adjWidth, event.x));
                 const newY = Math.max(0, Math.min(adjHeight, event.y));
                 line.attr("x1", newX)
@@ -268,6 +273,94 @@ function generateHistogram(voxels) {
         .attr('y', adjHeight)
         .attr('height', 0)
         .remove();
-
 }
 
+
+function buttonpress() {
+    document.getElementById('saveButton').addEventListener("click", function () {
+        console.log(density + " " + intensity + " " + theColor);
+        for (let i = 0; i < density_and_intensity_values.length; i++) {
+            if (density_and_intensity_values[i][0] === -1) {
+                density_and_intensity_values[i][0] = density;
+                density_and_intensity_values[i][1] = intensity;
+                density_and_intensity_values[i][2] = theColor;
+                updateDisplay();
+                break;
+            }
+        }
+    });
+}
+
+/*function saveValues() {
+    var svg = d3.select("#arrayStrContainer");
+
+// Bind data to text elements, create new text elements as needed
+    var text = svg.selectAll('text')
+        .data(density_and_intensity_values);
+    text.enter()
+        .append('text')
+        .merge(text)
+        .attr("dy", "2em")  // Adjust for vertical alignment of text
+        .attr("fill", "#000")  // Set text color
+        .text(function (d, i) {
+            // Display the value only if it is not -1
+            return d[0] === -1 ? (i+1) + ". no value selected" : (i+1) + ". density: " + Math.round(d[0]*100)/100 + ", intensity: " + Math.round(d[1]*100)/100 + ", color:" + d[2];
+
+        })
+        .on('click', function(event, d, i) {
+            console.log("Vor der Änderung:", d);
+
+            // Ändern eines Wertes im Array direkt
+            if (d[0] !== -1) {
+                // Beispiel: Setzen des ersten Werts auf einen neuen Wert
+                d[0] = -1;
+                d[1] = -1;
+                d[2] = "#ffffff"// Ändert den ersten Wert des Arrays zu einem zufälligen Wert
+                // Aufrufen einer Funktion zur Aktualisierung der Anzeige, falls notwendig
+                updateDisplay(svg);
+            }
+
+            console.log("Nach der Änderung:", d);
+        });
+
+    console.log('Textelement "Test-1" hinzugefügt');
+}*/
+
+function updateDisplay() {
+    var containers = document.querySelectorAll('.button-text-container .text');
+    containers.forEach(function (span, index) {
+        if (density_and_intensity_values[index][0] !== -1) {
+            span.textContent = "Density: " + Math.round(density_and_intensity_values[index][0] * 100) / 100 +
+                ", Intensity: " + Math.round(density_and_intensity_values[index][1] * 100) / 100 +
+                ", Color: " + density_and_intensity_values[index][2];
+        } else {
+            span.textContent = (index + 1) + ". no value selected";
+        }
+    });
+}
+
+
+function list() {
+    document.addEventListener("DOMContentLoaded", function () {
+        addEventListeners();
+        updateDisplay();
+        var containers = document.querySelectorAll('.button-text-container .text');
+        containers.forEach(function (span, index) {
+            span.textContent = Math.round(density_and_intensity_values[index][0] * 100) / 100 + ", intensity: " + Math.round(density_and_intensity_values[index][1] * 100) / 100 + ", color:" + density_and_intensity_values[index][2]; // Dynamischer Text
+        });
+    });
+}
+
+function addEventListeners() {
+    const containers = document.querySelectorAll('.button-text-container');
+    containers.forEach((container, index) => {
+        const button = container.querySelector('button');
+        button.addEventListener('click', function() {
+            // Setze die Werte auf Default für diesen spezifischen Index
+            density_and_intensity_values[index][0] = -1;
+            density_and_intensity_values[index][1] = -1;
+            density_and_intensity_values[index][2] = "#ffffff"; // Setze die Farbe zurück auf Weiß oder einen anderen Default-Wert
+            updateDisplay(container, index); // Aktualisiere nur diese spezifische Anzeige
+        });
+    });
+}

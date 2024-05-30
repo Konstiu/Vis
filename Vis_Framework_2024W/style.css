@@ -6,24 +6,55 @@ body {
 
 .container {
     display: flex;
-    vertical-align:top;
+    vertical-align: top;
     width: 100%;
     height: 50%;
     padding: 10px;
     border: 0px solid black;
 }
 
-#viewContainer{
+#viewContainer {
     flex: 2;
 }
 
-#tfContainer{
+#tfContainer {
     flex: 1;
 }
 
-.dot{
+.dot {
     height: 5px;
     width: 5px;
     border-radius: 50%;
     margin: 1px;
+}
+
+/*#arrayStrContainer text {
+    display: flex;  // Jedes SVG startet in einer neuen Zeile
+    margin-right: 40px;
+}
+/*#arrayStrContainer{
+    height: 80px;
+    align-content: end;
+    width: 2000px;
+    margin-right: 60px;
+}*/
+
+#arrayStrContainer {
+    width: 100%;
+}
+
+.button-text-container {
+    display: flex;
+    align-items: center; /* Zentriert die Elemente vertikal */
+    margin-bottom: 10px; /* Abstand zwischen den Reihen */
+}
+
+.button-text-container button {
+    margin-right: 10px; /* Abstand zwischen Button und Text */
+}
+.colorDisplay {
+    width: 10px; /* Breite des Farbvierecks*/
+    height: 10px; /*/ Höhe des Farbvierecks */
+    border: 1px solid #000; /*/ Rahmen des Farbvierecks*/
+    margin-left: 10px; /*/ Abstand nach oben*/
 }
