@@ -319,7 +319,7 @@ function updateLineAndCircle() {
             .attr("y1", newY)
             .attr("y2", adjHeight)
             .attr("class", "saved-line")
-            .style("stroke", "rgb(" + theColorRgb.r + ", " + theColorRgb.g + ", " + theColorRgb.b + ")")
+            .style("stroke", "rgb(" + theColorRgb.r*255 + ", " + theColorRgb.g*255 + ", " + theColorRgb.b*255 + ")")
             .style("stroke-width", "2px")
 
 
@@ -329,7 +329,7 @@ function updateLineAndCircle() {
             .attr("cy", newY)
             .attr("r", 10)
             .attr("class", "saved-circle")
-            .style("fill", "rgb(" + theColorRgb.r + ", " + theColorRgb.g + ", " + theColorRgb.b + ")")
+            .style("fill", "rgb(" + theColorRgb.r*255 + ", " + theColorRgb.g*255 + ", " + theColorRgb.b*255 + ")")
             .style("stroke-width", "2px")
     }
 }
