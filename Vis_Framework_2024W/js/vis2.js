@@ -28,7 +28,7 @@ let opacities = [1.0, 0.0]; // Example opacities
 
 let layerIndex = 0;
 
-let theColorRgb;
+let theColorRgb = new THREE.Vector3(1, 1, 1);
 
 
 /**
