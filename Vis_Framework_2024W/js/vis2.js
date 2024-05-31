@@ -22,12 +22,19 @@ let fileInput = null;
 let firstHitShader = null;
 let density = 0.3;
 let intensity = 1.0;
-let theColor = "#ffffff";
-let theColor_rgb = hexToRgb(theColor);
-let density_and_intensity_values = [[-1.0, -1.0, theColor], [-1.0, -1.0, theColor], [-1.0, -1.0, theColor], [-1.0, -1.0, theColor], [-1.0, -1.0, theColor]];
-let density_arr = [-1,-1,-1,-1,-1];
-let intensity_arr = [-1,-1,-1,-1,-1];
-let color_arr =[[theColor, theColor_rgb], [theColor, theColor_rgb], [theColor, theColor_rgb], [theColor, theColor_rgb], [theColor, theColor_rgb]];
+
+
+
+const MAX_SURFACES = 2;
+
+let isoValues = [density, 0.0]; // Example iso-values
+let surfaceColors = [new THREE.Vector3(1, 1, 1), new THREE.Vector3(0, 0, 0)]; // Example colors
+let opacities = [intensity, 0.0]; // Example opacities
+
+let layerIndex = 0;
+
+let theColor, theColorRgb;
+
 
 /**
  * Load all data and initialize UI here.
@@ -51,13 +58,24 @@ function init() {
     firstHitShader = new FirstHitShader();
 
     buttonpress();
+
+
+    firstHitShader.setUniform("iso_values", isoValues);
+    firstHitShader.setUniform("surface_colors", surfaceColors, "v3v");
+    firstHitShader.setUniform("opacities", opacities);
+
+
     // color changing
     var colorInput = document.getElementById("surfaceColor");
 
-    colorInput.addEventListener("input", function () {
+    colorInput.addEventListener("input", function(){
         theColor = colorInput.value;
-        theColor_rgb = hexToRgb(theColor);
-        firstHitShader.setSurfaceColor(new THREE.Vector3(theColor_rgb.r / 255, theColor_rgb.g / 255, theColor_rgb.b / 255));
+
+        theColorRgb = hexToRgb(theColor);
+        firstHitShader.setSurfaceColor(new THREE.Vector3(theColorRgb.r/255, theColorRgb.g/255, theColorRgb.b/255));
+        surfaceColors[layerIndex] = new THREE.Vector3(theColorRgb.r/255, theColorRgb.g/255, theColorRgb.b/255)
+        firstHitShader.setUniform("surface_colors", surfaceColors, "v3v");
+
         paint();
     }, false);
 }
@@ -76,7 +94,7 @@ function hexToRgb(hex) {
     const g = (bigint >> 8) & 255;
     const b = bigint & 255;
 
-    return {r, g, b};
+    return { r, g, b };
 }
 
 /**
@@ -140,7 +158,7 @@ function paint() {
 function generateHistogram(voxels) {
     const container = d3.select("#tfContainer");
     const width = 500;
-    const height = width / 2;
+    const height = width/2;
     const margin = {top: 10, right: 30, bottom: 40, left: 40};
     const adjWidth = width - margin.left - margin.right;
     const adjHeight = height - margin.top - margin.bottom;
@@ -165,8 +183,8 @@ function generateHistogram(voxels) {
             .attr('class', 'y-axis');
 
         const line = svg.append("line")
-            .attr("x1", (density * adjWidth))
-            .attr("x2", (density * adjWidth))
+            .attr("x1", (adjWidth/2))
+            .attr("x2", (adjWidth/2))
             .attr("y1", 0)
             .attr("y2", adjHeight)
             .style("stroke", "#ffffff")
@@ -175,7 +193,7 @@ function generateHistogram(voxels) {
 
 
         const ball = svg.append("circle")
-            .attr("cx", (density * adjWidth))
+            .attr("cx", (adjWidth/2))
             .attr("cy", 0)
             .attr("r", 10)
             .style("fill", "#ffffff")
@@ -183,7 +201,7 @@ function generateHistogram(voxels) {
             .style("cursor", "pointer");
 
         const dragLine = d3.drag()
-            .on("drag", function (event) {
+            .on("drag", function(event) {
                 const newX = Math.max(0, Math.min(adjWidth, event.x));
                 const newY = Math.max(0, Math.min(adjHeight, event.y));
                 line.attr("x1", newX)
@@ -195,6 +213,15 @@ function generateHistogram(voxels) {
 
                 density = line.node().getAttribute("x1") / adjWidth;
                 intensity = line.node().getAttribute("y1") / (adjHeight) * -1 + 1;
+                isoValues[layerIndex] = density;
+                firstHitShader.setUniform("iso_values", isoValues);
+                opacities[layerIndex] = intensity;
+                firstHitShader.setUniform("opacities", opacities);
+
+                console.log(isoValues);
+                console.log(opacities);
+                console.log(layerIndex);
+
                 firstHitShader.setIsoVal(density);
                 paint();
             });
@@ -274,36 +301,15 @@ function generateHistogram(voxels) {
         .attr('y', adjHeight)
         .attr('height', 0)
         .remove();
-}
 
+}
 
 function buttonpress() {
-    document.getElementById('saveButton').addEventListener("click", function () {
-        console.log(density + " " + intensity + " " + theColor);
-        /*for (let i = 0; i < density_and_intensity_values.length; i++) {
-            if (density_and_intensity_values[i][0] === -1) {
-                density_and_intensity_values[i][0] = density;
-                density_and_intensity_values[i][1] = intensity;
-                density_and_intensity_values[i][2] = theColor;
-                console.log(density + " " + intensity + " " + theColor);
-                updateLineAndCircle();
-                break;
-            }
-        }*/
-        for (let i = 0; i < density_arr.length; i++) {
-            if (density_arr[i] === -1) {
-                density_arr[i] = density;
-                intensity_arr[i] = intensity;
-                color_arr[i][0] = theColor;
-                color_arr[i][1] = theColor_rgb;
-                //console.log(density + " " + intensity + " " + theColor+ " " + theColor_rgb);
-                updateLineAndCircle();
-                break;
-            }
-        }
+    document.getElementById('saveButton').addEventListener("click", function (){
+        layerIndex++;
+        updateLineAndCircle();
     });
 }
-
 
 function updateLineAndCircle() {
     const svg = d3.select('#tfContainer').select('svg').select('g');
@@ -315,12 +321,9 @@ function updateLineAndCircle() {
     const adjHeight = height - margin.top - margin.bottom;
     svg.selectAll("saved-line").remove();
     svg.selectAll("saved-circle").remove();
-    for (let i = 0; i <density_arr.length; i++) {
-        if (density_arr[i] === -1) {
-            continue;
-        }
-        const newX = density_arr[i] * adjWidth;
-        const newY = (intensity_arr[i] -1)  *-1* adjHeight;
+    for (let i = 0; i < MAX_SURFACES; i++) {
+        const newX = isoValues[i] * adjWidth;
+        const newY = (opacities[i] - 1) * -1 * adjHeight;
 
         svg.insert("line", ":first-child")
             .attr("x1", newX)
@@ -328,8 +331,9 @@ function updateLineAndCircle() {
             .attr("y1", newY)
             .attr("y2", adjHeight)
             .attr("class", "saved-line")
-            .style("stroke", color_arr[i][0])
+            .style("stroke", "rgb(" + theColorRgb.r + ", " + theColorRgb.g + ", " + theColorRgb.b + ")")
             .style("stroke-width", "2px")
+
 
 
         svg.insert("circle", ":first-child")
@@ -337,7 +341,8 @@ function updateLineAndCircle() {
             .attr("cy", newY)
             .attr("r", 10)
             .attr("class", "saved-circle")
-            .style("fill", color_arr[i][0])
+            .style("fill", "rgb(" + theColorRgb.r + ", " + theColorRgb.g + ", " + theColorRgb.b + ")")
             .style("stroke-width", "2px")
     }
 }
+
