@@ -22,9 +22,9 @@ let fileInput = null;
 let firstHitShader = null;
 
 
-let isoValues = [0.5, -1]; // Example iso-values
-let surfaceColors = [new THREE.Vector3(1, 1, 1), new THREE.Vector3(1, 1, 1)];
-let opacities = [1.0, -1]; // Example opacities
+let isoValues = [0.5, -1, -1]; // Example iso-values
+let surfaceColors = [new THREE.Vector3(1, 1, 1), new THREE.Vector3(1, 1, 1), new THREE.Vector3(1, 1, 1)];
+let opacities = [1.0, -1, -1]; // Example opacities
 
 let layerIndex = 0;
 
@@ -296,7 +296,7 @@ function generateHistogram(voxels) {
 
 function buttonpress() {
     document.getElementById('saveButton').addEventListener("click", function (){
-        if (layerIndex === 2){
+        if (layerIndex === 3){
             return;
         }
         layerIndex++;

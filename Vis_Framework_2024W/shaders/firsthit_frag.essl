@@ -16,7 +16,7 @@ uniform float steps;
 uniform float iso_value;
 uniform vec3 surface_color;
 
-const int MAX_ISO_VALUES = 2; // Adjust as needed
+const int MAX_ISO_VALUES = 3; // Adjust as needed
 uniform float iso_values[MAX_ISO_VALUES];
 uniform vec3 surface_colors[MAX_ISO_VALUES];
 uniform float opacities[MAX_ISO_VALUES];
