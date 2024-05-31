@@ -28,17 +28,6 @@ body {
     margin: 1px;
 }
 
-/*#arrayStrContainer text {
-    display: flex;  // Jedes SVG startet in einer neuen Zeile
-    margin-right: 40px;
-}
-/*#arrayStrContainer{
-    height: 80px;
-    align-content: end;
-    width: 2000px;
-    margin-right: 60px;
-}*/
-
 #arrayStrContainer {
     width: 100%;
 }
@@ -51,10 +40,4 @@ body {
 
 .button-text-container button {
     margin-right: 10px; /* Abstand zwischen Button und Text */
-}
-.colorDisplay {
-    width: 10px; /* Breite des Farbvierecks*/
-    height: 10px; /*/ Höhe des Farbvierecks */
-    border: 1px solid #000; /*/ Rahmen des Farbvierecks*/
-    margin-left: 10px; /*/ Abstand nach oben*/
 }

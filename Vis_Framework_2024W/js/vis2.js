@@ -23,7 +23,11 @@ let firstHitShader = null;
 let density = 0.3;
 let intensity = 1.0;
 let theColor = "#ffffff";
+let theColor_rgb = hexToRgb(theColor);
 let density_and_intensity_values = [[-1.0, -1.0, theColor], [-1.0, -1.0, theColor], [-1.0, -1.0, theColor], [-1.0, -1.0, theColor], [-1.0, -1.0, theColor]];
+let density_arr = [-1,-1,-1,-1,-1];
+let intensity_arr = [-1,-1,-1,-1,-1];
+let color_arr =[[theColor, theColor_rgb], [theColor, theColor_rgb], [theColor, theColor_rgb], [theColor, theColor_rgb], [theColor, theColor_rgb]];
 
 /**
  * Load all data and initialize UI here.
@@ -47,16 +51,13 @@ function init() {
     firstHitShader = new FirstHitShader();
 
     buttonpress();
-    list();
-    addEventListeners();
-    updateDisplay();
     // color changing
     var colorInput = document.getElementById("surfaceColor");
 
     colorInput.addEventListener("input", function () {
         theColor = colorInput.value;
-        let rgb = hexToRgb(theColor);
-        firstHitShader.setSurfaceColor(new THREE.Vector3(rgb.r / 255, rgb.g / 255, rgb.b / 255));
+        theColor_rgb = hexToRgb(theColor);
+        firstHitShader.setSurfaceColor(new THREE.Vector3(theColor_rgb.r / 255, theColor_rgb.g / 255, theColor_rgb.b / 255));
         paint();
     }, false);
 }
@@ -164,8 +165,8 @@ function generateHistogram(voxels) {
             .attr('class', 'y-axis');
 
         const line = svg.append("line")
-            .attr("x1", (adjWidth / 2))
-            .attr("x2", (adjWidth / 2))
+            .attr("x1", (density * adjWidth))
+            .attr("x2", (density * adjWidth))
             .attr("y1", 0)
             .attr("y2", adjHeight)
             .style("stroke", "#ffffff")
@@ -174,7 +175,7 @@ function generateHistogram(voxels) {
 
 
         const ball = svg.append("circle")
-            .attr("cx", (adjWidth / 2))
+            .attr("cx", (density * adjWidth))
             .attr("cy", 0)
             .attr("r", 10)
             .style("fill", "#ffffff")
@@ -279,88 +280,64 @@ function generateHistogram(voxels) {
 function buttonpress() {
     document.getElementById('saveButton').addEventListener("click", function () {
         console.log(density + " " + intensity + " " + theColor);
-        for (let i = 0; i < density_and_intensity_values.length; i++) {
+        /*for (let i = 0; i < density_and_intensity_values.length; i++) {
             if (density_and_intensity_values[i][0] === -1) {
                 density_and_intensity_values[i][0] = density;
                 density_and_intensity_values[i][1] = intensity;
                 density_and_intensity_values[i][2] = theColor;
-                updateDisplay();
+                console.log(density + " " + intensity + " " + theColor);
+                updateLineAndCircle();
+                break;
+            }
+        }*/
+        for (let i = 0; i < density_arr.length; i++) {
+            if (density_arr[i] === -1) {
+                density_arr[i] = density;
+                intensity_arr[i] = intensity;
+                color_arr[i][0] = theColor;
+                color_arr[i][1] = theColor_rgb;
+                //console.log(density + " " + intensity + " " + theColor+ " " + theColor_rgb);
+                updateLineAndCircle();
                 break;
             }
         }
     });
 }
 
-/*function saveValues() {
-    var svg = d3.select("#arrayStrContainer");
 
-// Bind data to text elements, create new text elements as needed
-    var text = svg.selectAll('text')
-        .data(density_and_intensity_values);
-    text.enter()
-        .append('text')
-        .merge(text)
-        .attr("dy", "2em")  // Adjust for vertical alignment of text
-        .attr("fill", "#000")  // Set text color
-        .text(function (d, i) {
-            // Display the value only if it is not -1
-            return d[0] === -1 ? (i+1) + ". no value selected" : (i+1) + ". density: " + Math.round(d[0]*100)/100 + ", intensity: " + Math.round(d[1]*100)/100 + ", color:" + d[2];
+function updateLineAndCircle() {
+    const svg = d3.select('#tfContainer').select('svg').select('g');
 
-        })
-        .on('click', function(event, d, i) {
-            console.log("Vor der Änderung:", d);
-
-            // Ändern eines Wertes im Array direkt
-            if (d[0] !== -1) {
-                // Beispiel: Setzen des ersten Werts auf einen neuen Wert
-                d[0] = -1;
-                d[1] = -1;
-                d[2] = "#ffffff"// Ändert den ersten Wert des Arrays zu einem zufälligen Wert
-                // Aufrufen einer Funktion zur Aktualisierung der Anzeige, falls notwendig
-                updateDisplay(svg);
-            }
-
-            console.log("Nach der Änderung:", d);
-        });
-
-    console.log('Textelement "Test-1" hinzugefügt');
-}*/
-
-function updateDisplay() {
-    var containers = document.querySelectorAll('.button-text-container .text');
-    containers.forEach(function (span, index) {
-        if (density_and_intensity_values[index][0] !== -1) {
-            span.textContent = "Density: " + Math.round(density_and_intensity_values[index][0] * 100) / 100 +
-                ", Intensity: " + Math.round(density_and_intensity_values[index][1] * 100) / 100 +
-                ", Color: " + density_and_intensity_values[index][2];
-        } else {
-            span.textContent = (index + 1) + ". no value selected";
+    const width = 500;
+    const height = width / 2;
+    const margin = {top: 10, right: 30, bottom: 40, left: 40};
+    const adjWidth = width - margin.left - margin.right;
+    const adjHeight = height - margin.top - margin.bottom;
+    svg.selectAll("saved-line").remove();
+    svg.selectAll("saved-circle").remove();
+    for (let i = 0; i <density_arr.length; i++) {
+        if (density_arr[i] === -1) {
+            continue;
         }
-    });
-}
+        const newX = density_arr[i] * adjWidth;
+        const newY = (intensity_arr[i] -1)  *-1* adjHeight;
+
+        svg.insert("line", ":first-child")
+            .attr("x1", newX)
+            .attr("x2", newX)
+            .attr("y1", newY)
+            .attr("y2", adjHeight)
+            .attr("class", "saved-line")
+            .style("stroke", color_arr[i][0])
+            .style("stroke-width", "2px")
 
 
-function list() {
-    document.addEventListener("DOMContentLoaded", function () {
-        addEventListeners();
-        updateDisplay();
-        var containers = document.querySelectorAll('.button-text-container .text');
-        containers.forEach(function (span, index) {
-            span.textContent = Math.round(density_and_intensity_values[index][0] * 100) / 100 + ", intensity: " + Math.round(density_and_intensity_values[index][1] * 100) / 100 + ", color:" + density_and_intensity_values[index][2]; // Dynamischer Text
-        });
-    });
-}
-
-function addEventListeners() {
-    const containers = document.querySelectorAll('.button-text-container');
-    containers.forEach((container, index) => {
-        const button = container.querySelector('button');
-        button.addEventListener('click', function() {
-            // Setze die Werte auf Default für diesen spezifischen Index
-            density_and_intensity_values[index][0] = -1;
-            density_and_intensity_values[index][1] = -1;
-            density_and_intensity_values[index][2] = "#ffffff"; // Setze die Farbe zurück auf Weiß oder einen anderen Default-Wert
-            updateDisplay(container, index); // Aktualisiere nur diese spezifische Anzeige
-        });
-    });
+        svg.insert("circle", ":first-child")
+            .attr("cx", newX)
+            .attr("cy", newY)
+            .attr("r", 10)
+            .attr("class", "saved-circle")
+            .style("fill", color_arr[i][0])
+            .style("stroke-width", "2px")
+    }
 }
