@@ -20,20 +20,15 @@ let container = null;
 let volume = null;
 let fileInput = null;
 let firstHitShader = null;
-let density = 0.3;
-let intensity = 1.0;
 
 
-
-const MAX_SURFACES = 2;
-
-let isoValues = [density, 0.0]; // Example iso-values
-let surfaceColors = [new THREE.Vector3(1, 1, 1), new THREE.Vector3(0, 0, 0)]; // Example colors
-let opacities = [intensity, 0.0]; // Example opacities
+let isoValues = [0.3, 0.0]; // Example iso-values
+let surfaceColors = [new THREE.Vector3(1, 1, 1), new THREE.Vector3(1, 1, 1)];
+let opacities = [1.0, 0.0]; // Example opacities
 
 let layerIndex = 0;
 
-let theColor, theColorRgb;
+let theColorRgb;
 
 
 /**
@@ -69,11 +64,11 @@ function init() {
     var colorInput = document.getElementById("surfaceColor");
 
     colorInput.addEventListener("input", function(){
-        theColor = colorInput.value;
+        let theColor = colorInput.value;
 
         theColorRgb = hexToRgb(theColor);
-        firstHitShader.setSurfaceColor(new THREE.Vector3(theColorRgb.r/255, theColorRgb.g/255, theColorRgb.b/255));
-        surfaceColors[layerIndex] = new THREE.Vector3(theColorRgb.r/255, theColorRgb.g/255, theColorRgb.b/255)
+        //firstHitShader.setSurfaceColor(new THREE.Vector3(theColorRgb.r/255, theColorRgb.g/255, theColorRgb.b/255));
+        surfaceColors[layerIndex] = new THREE.Vector3(theColorRgb.r, theColorRgb.g, theColorRgb.b)
         firstHitShader.setUniform("surface_colors", surfaceColors, "v3v");
 
         paint();
@@ -90,9 +85,9 @@ function hexToRgb(hex) {
     }
 
     const bigint = parseInt(hex, 16);
-    const r = (bigint >> 16) & 255;
-    const g = (bigint >> 8) & 255;
-    const b = bigint & 255;
+    const r = ((bigint >> 16) & 255) / 255.0;
+    const g = ((bigint >> 8) & 255) / 255;
+    const b = (bigint & 255) / 255;
 
     return { r, g, b };
 }
@@ -211,18 +206,11 @@ function generateHistogram(voxels) {
                 ball.attr("cx", newX)
                     .attr("cy", newY);
 
-                density = line.node().getAttribute("x1") / adjWidth;
-                intensity = line.node().getAttribute("y1") / (adjHeight) * -1 + 1;
-                isoValues[layerIndex] = density;
+
+                isoValues[layerIndex] = line.node().getAttribute("x1") / adjWidth;
                 firstHitShader.setUniform("iso_values", isoValues);
-                opacities[layerIndex] = intensity;
+                opacities[layerIndex] = line.node().getAttribute("y1") / (adjHeight) * -1 + 1;
                 firstHitShader.setUniform("opacities", opacities);
-
-                console.log(isoValues);
-                console.log(opacities);
-                console.log(layerIndex);
-
-                firstHitShader.setIsoVal(density);
                 paint();
             });
 
@@ -321,7 +309,7 @@ function updateLineAndCircle() {
     const adjHeight = height - margin.top - margin.bottom;
     svg.selectAll("saved-line").remove();
     svg.selectAll("saved-circle").remove();
-    for (let i = 0; i < MAX_SURFACES; i++) {
+    for (let i = 0; i < layerIndex; i++) {
         const newX = isoValues[i] * adjWidth;
         const newY = (opacities[i] - 1) * -1 * adjHeight;
 
