@@ -22,9 +22,9 @@ let fileInput = null;
 let firstHitShader = null;
 
 
-let isoValues = [0.5, 0.0]; // Example iso-values
+let isoValues = [0.5, -1]; // Example iso-values
 let surfaceColors = [new THREE.Vector3(1, 1, 1), new THREE.Vector3(1, 1, 1)];
-let opacities = [1.0, 0.0]; // Example opacities
+let opacities = [1.0, -1]; // Example opacities
 
 let layerIndex = 0;
 
@@ -53,6 +53,7 @@ function init() {
     firstHitShader = new FirstHitShader();
 
     buttonpress();
+    buttonPressDelete();
 
 
     firstHitShader.setUniform("iso_values", isoValues);
@@ -295,9 +296,24 @@ function generateHistogram(voxels) {
 
 function buttonpress() {
     document.getElementById('saveButton').addEventListener("click", function (){
+        if (layerIndex === 2){
+            return;
+        }
         layerIndex++;
         updateLineAndCircle();
     });
+}
+
+function buttonPressDelete() {
+    document.getElementById('deleteButton').addEventListener("click", function (){
+        if (layerIndex === 0){
+            return;
+        }
+        isoValues[layerIndex] = -1;
+        opacities[layerIndex] = -1;
+        layerIndex--;
+        updateLineAndCircle();
+    })
 }
 
 function updateLineAndCircle() {
@@ -308,8 +324,8 @@ function updateLineAndCircle() {
     const margin = {top: 10, right: 30, bottom: 40, left: 40};
     const adjWidth = width - margin.left - margin.right;
     const adjHeight = height - margin.top - margin.bottom;
-    svg.selectAll("saved-line").remove();
-    svg.selectAll("saved-circle").remove();
+    svg.selectAll(".saved-line").remove();
+    svg.selectAll(".saved-circle").remove();
     for (let i = 0; i < layerIndex; i++) {
         const newX = isoValues[i] * adjWidth;
         const newY = (opacities[i] - 1) * -1 * adjHeight;
@@ -320,7 +336,7 @@ function updateLineAndCircle() {
             .attr("y1", newY)
             .attr("y2", adjHeight)
             .attr("class", "saved-line")
-            .style("stroke", "rgb(" + theColorRgb.x + ", " + theColorRgb.y + ", " + theColorRgb.z + ")")
+            .style("stroke", "rgb(" + surfaceColors[i].x*255 + ", " + surfaceColors[i].y*255 + ", " + surfaceColors[i].z*255 + ")")
             .style("stroke-width", "2px")
 
 
@@ -330,9 +346,8 @@ function updateLineAndCircle() {
             .attr("cy", newY)
             .attr("r", 10)
             .attr("class", "saved-circle")
-            .style("fill", "rgb(" + theColorRgb.x + ", " + theColorRgb.y + ", " + theColorRgb.z + ")")
+            .style("fill", "rgb(" + surfaceColors[i].x*255 + ", " + surfaceColors[i].y*255 + ", " + surfaceColors[i].z*255 + ")")
             .style("stroke-width", "2px")
     }
-    paint();
 }
 
