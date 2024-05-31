@@ -21,6 +21,9 @@ let volume = null;
 let fileInput = null;
 let firstHitShader = null;
 
+let cursor_x;
+let cursor_y;
+
 
 let isoValues = [0.5, -1, -1]; // Example iso-values
 let surfaceColors = [new THREE.Vector3(1, 1, 1), new THREE.Vector3(1, 1, 1), new THREE.Vector3(1, 1, 1)];
@@ -28,7 +31,7 @@ let opacities = [1.0, -1, -1]; // Example opacities
 
 let layerIndex = 0;
 
-let theColorRgb =  new THREE.Vector3(255, 255, 255);
+let theColorRgb = new THREE.Vector3(255, 255, 255);
 
 
 /**
@@ -64,13 +67,13 @@ function init() {
     // color changing
     var colorInput = document.getElementById("surfaceColor");
 
-    colorInput.addEventListener("input", function(){
+    colorInput.addEventListener("input", function () {
         let theColor = colorInput.value;
 
         theColorRgb = hexToRgb(theColor);
 
         //firstHitShader.setSurfaceColor(new THREE.Vector3(theColorRgb.r/255, theColorRgb.g/255, theColorRgb.b/255));
-        surfaceColors[layerIndex] = new THREE.Vector3(theColorRgb.x/255.0, theColorRgb.y/255.0, theColorRgb.z/255.0)
+        surfaceColors[layerIndex] = new THREE.Vector3(theColorRgb.x / 255.0, theColorRgb.y / 255.0, theColorRgb.z / 255.0)
         firstHitShader.setUniform("surface_colors", surfaceColors, "v3v");
 
         paint();
@@ -155,7 +158,7 @@ function paint() {
 function generateHistogram(voxels) {
     const container = d3.select("#tfContainer");
     const width = 500;
-    const height = width/2;
+    const height = width / 2;
     const margin = {top: 10, right: 30, bottom: 40, left: 40};
     const adjWidth = width - margin.left - margin.right;
     const adjHeight = height - margin.top - margin.bottom;
@@ -180,8 +183,8 @@ function generateHistogram(voxels) {
             .attr('class', 'y-axis');
 
         const line = svg.append("line")
-            .attr("x1", (adjWidth/2))
-            .attr("x2", (adjWidth/2))
+            .attr("x1", (adjWidth / 2))
+            .attr("x2", (adjWidth / 2))
             .attr("y1", 0)
             .attr("y2", adjHeight)
             .style("stroke", "white")
@@ -190,7 +193,7 @@ function generateHistogram(voxels) {
 
 
         const ball = svg.append("circle")
-            .attr("cx", (adjWidth/2))
+            .attr("cx", (adjWidth / 2))
             .attr("cy", 0)
             .attr("r", 10)
             .style("fill", "white")
@@ -198,7 +201,7 @@ function generateHistogram(voxels) {
             .style("cursor", "pointer");
 
         const dragLine = d3.drag()
-            .on("drag", function(event) {
+            .on("drag", function (event) {
                 const newX = Math.max(0, Math.min(adjWidth, event.x));
                 const newY = Math.max(0, Math.min(adjHeight, event.y));
                 line.attr("x1", newX)
@@ -209,11 +212,15 @@ function generateHistogram(voxels) {
                     .attr("cy", newY);
 
 
-                isoValues[layerIndex] = line.node().getAttribute("x1") / adjWidth;
-                firstHitShader.setUniform("iso_values", isoValues);
-                opacities[layerIndex] = line.node().getAttribute("y1") / (adjHeight) * -1 + 1;
-                firstHitShader.setUniform("opacities", opacities);
-                paint();
+                cursor_x = line.node().getAttribute("x1") / adjWidth;
+                cursor_y = line.node().getAttribute("y1") / (adjHeight) * -1 + 1;
+                if (layerIndex !== 3) {
+                    isoValues[layerIndex] = cursor_x;
+                    opacities[layerIndex] = cursor_y;
+                    firstHitShader.setUniform("iso_values", isoValues);
+                    firstHitShader.setUniform("opacities", opacities);
+                    paint();
+                }
             });
 
         line.call(dragLine);
@@ -295,23 +302,27 @@ function generateHistogram(voxels) {
 }
 
 function buttonpress() {
-    document.getElementById('saveButton').addEventListener("click", function (){
-        if (layerIndex === 3){
+    document.getElementById('saveButton').addEventListener("click", function () {
+        if (layerIndex === 3) {
             return;
         }
+        updateValuesIfNeed();
         layerIndex++;
         updateLineAndCircle();
     });
 }
 
 function buttonPressDelete() {
-    document.getElementById('deleteButton').addEventListener("click", function (){
-        if (layerIndex === 0){
+    document.getElementById('deleteButton').addEventListener("click", function () {
+        if (layerIndex <= 0) {
             return;
         }
-        isoValues[layerIndex] = -1;
-        opacities[layerIndex] = -1;
         layerIndex--;
+        for (let i = layerIndex; i < 3; i++) {
+            isoValues[i] = -1;
+            opacities[i] = -1;
+            surfaceColors[i] = new THREE.Vector3(1, 1, 1);
+        }
         updateLineAndCircle();
     })
 }
@@ -336,9 +347,8 @@ function updateLineAndCircle() {
             .attr("y1", newY)
             .attr("y2", adjHeight)
             .attr("class", "saved-line")
-            .style("stroke", "rgb(" + surfaceColors[i].x*255 + ", " + surfaceColors[i].y*255 + ", " + surfaceColors[i].z*255 + ")")
+            .style("stroke", "rgb(" + surfaceColors[i].x * 255 + ", " + surfaceColors[i].y * 255 + ", " + surfaceColors[i].z * 255 + ")")
             .style("stroke-width", "2px")
-
 
 
         svg.insert("circle", ":first-child")
@@ -346,8 +356,17 @@ function updateLineAndCircle() {
             .attr("cy", newY)
             .attr("r", 10)
             .attr("class", "saved-circle")
-            .style("fill", "rgb(" + surfaceColors[i].x*255 + ", " + surfaceColors[i].y*255 + ", " + surfaceColors[i].z*255 + ")")
+            .style("fill", "rgb(" + surfaceColors[i].x * 255 + ", " + surfaceColors[i].y * 255 + ", " + surfaceColors[i].z * 255 + ")")
             .style("stroke-width", "2px")
     }
 }
 
+function updateValuesIfNeed() {
+    if (isoValues[layerIndex] === -1) {
+        isoValues[layerIndex] = cursor_x;
+        firstHitShader.setUniform("iso_values", isoValues);
+        opacities[layerIndex] = cursor_y;
+        firstHitShader.setUniform("opacities", opacities);
+    }
+    paint();
+}
