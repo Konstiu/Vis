@@ -28,7 +28,7 @@ let opacities = [1.0, 0.0]; // Example opacities
 
 let layerIndex = 0;
 
-let theColorRgb = new THREE.Vector3(1, 1, 1);
+let theColorRgb =  new THREE.Vector3(255, 255, 255);
 
 
 /**
@@ -67,8 +67,9 @@ function init() {
         let theColor = colorInput.value;
 
         theColorRgb = hexToRgb(theColor);
+
         //firstHitShader.setSurfaceColor(new THREE.Vector3(theColorRgb.r/255, theColorRgb.g/255, theColorRgb.b/255));
-        surfaceColors[layerIndex] = new THREE.Vector3(theColorRgb.r, theColorRgb.g, theColorRgb.b)
+        surfaceColors[layerIndex] = new THREE.Vector3(theColorRgb.x/255.0, theColorRgb.y/255.0, theColorRgb.z/255.0)
         firstHitShader.setUniform("surface_colors", surfaceColors, "v3v");
 
         paint();
@@ -85,11 +86,11 @@ function hexToRgb(hex) {
     }
 
     const bigint = parseInt(hex, 16);
-    const r = ((bigint >> 16) & 255) / 255.0;
-    const g = ((bigint >> 8) & 255) / 255;
-    const b = (bigint & 255) / 255;
+    const r = ((bigint >> 16) & 255);
+    const g = ((bigint >> 8) & 255);
+    const b = (bigint & 255);
 
-    return { r, g, b };
+    return new THREE.Vector3(r, g, b);
 }
 
 /**
@@ -182,7 +183,7 @@ function generateHistogram(voxels) {
             .attr("x2", (adjWidth/2))
             .attr("y1", 0)
             .attr("y2", adjHeight)
-            .style("stroke", "#ffffff")
+            .style("stroke", "white")
             .style("stroke-width", "2px")
             .style("cursor", "pointer");
 
@@ -191,7 +192,7 @@ function generateHistogram(voxels) {
             .attr("cx", (adjWidth/2))
             .attr("cy", 0)
             .attr("r", 10)
-            .style("fill", "#ffffff")
+            .style("fill", "white")
             .style("stroke-width", "2px")
             .style("cursor", "pointer");
 
@@ -319,7 +320,7 @@ function updateLineAndCircle() {
             .attr("y1", newY)
             .attr("y2", adjHeight)
             .attr("class", "saved-line")
-            .style("stroke", "rgb(" + theColorRgb.r*255 + ", " + theColorRgb.g*255 + ", " + theColorRgb.b*255 + ")")
+            .style("stroke", "rgb(" + theColorRgb.x + ", " + theColorRgb.y + ", " + theColorRgb.z + ")")
             .style("stroke-width", "2px")
 
 
@@ -329,8 +330,9 @@ function updateLineAndCircle() {
             .attr("cy", newY)
             .attr("r", 10)
             .attr("class", "saved-circle")
-            .style("fill", "rgb(" + theColorRgb.r*255 + ", " + theColorRgb.g*255 + ", " + theColorRgb.b*255 + ")")
+            .style("fill", "rgb(" + theColorRgb.x + ", " + theColorRgb.y + ", " + theColorRgb.z + ")")
             .style("stroke-width", "2px")
     }
+    paint();
 }
 
