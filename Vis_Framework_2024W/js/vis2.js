@@ -22,7 +22,7 @@ let fileInput = null;
 let firstHitShader = null;
 
 
-let isoValues = [0.3, 0.0]; // Example iso-values
+let isoValues = [0.5, 0.0]; // Example iso-values
 let surfaceColors = [new THREE.Vector3(1, 1, 1), new THREE.Vector3(1, 1, 1)];
 let opacities = [1.0, 0.0]; // Example opacities
 
