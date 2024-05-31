@@ -308,6 +308,7 @@ function buttonpress() {
         }
         updateValuesIfNeed();
         layerIndex++;
+        document.getElementById('surfaceColor').value = '#ffffff';
         updateLineAndCircle();
     });
 }
@@ -323,6 +324,7 @@ function buttonPressDelete() {
             opacities[i] = -1;
             surfaceColors[i] = new THREE.Vector3(1, 1, 1);
         }
+        document.getElementById('surfaceColor').value = '#ffffff';
         updateLineAndCircle();
     })
 }
