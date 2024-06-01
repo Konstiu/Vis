@@ -9,7 +9,7 @@ out vec3 vDir;
 
 void main() {
     // calculate the ray and normalize
-    vEye = ((inverse(modelMatrix) * vec4(cameraPosition, 1.0)).xyz) / volume_scale;
+    vEye = vec4(cameraPosition, 1.0).xyz / volume_scale;
     vDir = (position / volume_scale) - vEye;
 
     gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
