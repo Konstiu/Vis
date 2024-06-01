@@ -42,9 +42,9 @@ vec2 intersect_box(vec3 orig, vec3 dir) {
 // Function to compute the gradient at a given position
 vec3 compute_gradient(vec3 pos) {
     float epsilon = 1.0 / 256.0; // Adjust based on volume resolution
-    float dx = (texture(volume, pos + vec3(epsilon, 0.0, 0.0)).r - texture(volume, pos - vec3(epsilon, 0.0, 0.0)).r));
-    float dy = (texture(volume, pos + vec3(0.0, epsilon, 0.0)).r - texture(volume, pos - vec3(0.0, epsilon, 0.0)).r));
-    float dz = (texture(volume, pos + vec3(0.0, 0.0, epsilon)).r - texture(volume, pos - vec3(0.0, 0.0, epsilon)).r));
+    float dx = (texture(volume, pos + vec3(epsilon, 0.0, 0.0)).r - texture(volume, pos - vec3(epsilon, 0.0, 0.0)).r);
+    float dy = (texture(volume, pos + vec3(0.0, epsilon, 0.0)).r - texture(volume, pos - vec3(0.0, epsilon, 0.0)).r);
+    float dz = (texture(volume, pos + vec3(0.0, 0.0, epsilon)).r - texture(volume, pos - vec3(0.0, 0.0, epsilon)).r);
     return normalize(vec3(dx, dy, dz));
 }
 void main() {
