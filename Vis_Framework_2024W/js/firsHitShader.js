@@ -32,11 +32,15 @@ class FirstHitShader extends Shader {
         this.setUniform("steps", steps);
     }
 
-    setIsoVal(density) {
-        this.setUniform("iso_value", density);
+    setIsoValues(isoValues) {
+        this.setUniform("iso_values", isoValues);
     }
 
-    setSurfaceColor(color){
-        this.setUniform("surface_color", color);
+    setOpacities(opacities) {
+        this.setUniform("opacities", opacities);
+    }
+
+    setSurfaceColors(colors){
+        this.setUniform("surface_colors", colors, "v3v");
     }
 }

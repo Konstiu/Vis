@@ -59,9 +59,9 @@ function init() {
     buttonPressDelete();
 
 
-    firstHitShader.setUniform("iso_values", isoValues);
-    firstHitShader.setUniform("surface_colors", surfaceColors, "v3v");
-    firstHitShader.setUniform("opacities", opacities);
+    firstHitShader.setIsoValues(isoValues);
+    firstHitShader.setSurfaceColors(surfaceColors);
+    firstHitShader.setOpacities(opacities);
 
 
     // color changing
@@ -74,8 +74,7 @@ function init() {
 
         //firstHitShader.setSurfaceColor(new THREE.Vector3(theColorRgb.r/255, theColorRgb.g/255, theColorRgb.b/255));
         surfaceColors[layerIndex] = new THREE.Vector3(theColorRgb.x / 255.0, theColorRgb.y / 255.0, theColorRgb.z / 255.0)
-        firstHitShader.setUniform("surface_colors", surfaceColors, "v3v");
-
+        firstHitShader.setSurfaceColors(surfaceColors);
         paint();
     }, false);
 }
@@ -217,8 +216,8 @@ function generateHistogram(voxels) {
                 if (layerIndex !== MAX_LAYERS) {
                     isoValues[layerIndex] = cursor_x;
                     opacities[layerIndex] = cursor_y;
-                    firstHitShader.setUniform("iso_values", isoValues);
-                    firstHitShader.setUniform("opacities", opacities);
+                    firstHitShader.setIsoValues(isoValues);
+                    firstHitShader.setOpacities(opacities);
                     paint();
                 }
             });
@@ -367,9 +366,9 @@ function updateLineAndCircle() {
 function updateValuesIfNeed() {
     if (isoValues[layerIndex] === -1) {
         isoValues[layerIndex] = cursor_x;
-        firstHitShader.setUniform("iso_values", isoValues);
+        firstHitShader.setIsoValues(isoValues);
         opacities[layerIndex] = cursor_y;
-        firstHitShader.setUniform("opacities", opacities);
+        firstHitShader.setOpacities(opacities);
     }
     paint();
 }
