@@ -76,8 +76,6 @@ void main() {
     vec3 prev_pos = pos - rayDir * delta;
     float prev_value = texture(volume, prev_pos + 0.5).r; // get initial density value
 
-    float occlusion = 1.0;
-
     // sample along the ray
     for (float t = bounds.x; t < bounds.y; t += delta) {
         float density = texture(volume, pos + 0.5).r; // get density value
