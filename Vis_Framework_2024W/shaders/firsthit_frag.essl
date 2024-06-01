@@ -10,18 +10,12 @@ uniform sampler3D volume;
 uniform sampler3D gradient;
 
 
-
 uniform float steps;
 
-uniform float iso_value;
-uniform vec3 surface_color;
-
-const int MAX_ISO_VALUES = 3; // Adjust as needed
+const int MAX_ISO_VALUES = 3;
 uniform float iso_values[MAX_ISO_VALUES];
 uniform vec3 surface_colors[MAX_ISO_VALUES];
 uniform float opacities[MAX_ISO_VALUES];
-
-uniform float ambient_occlusion;
 
 in vec3 vEye;
 in vec3 vDir;
@@ -45,7 +39,14 @@ vec2 intersect_box(vec3 orig, vec3 dir) {
     float t1 = min(tmax.x, min(tmax.y, tmax.z));
     return vec2(t0, t1);
 }
-
+// Function to compute the gradient at a given position
+vec3 compute_gradient(vec3 pos) {
+    float epsilon = 1.0 / 256.0; // Adjust based on volume resolution
+    float dx = (texture(volume, pos + vec3(epsilon, 0.0, 0.0)).r - texture(volume, pos - vec3(epsilon, 0.0, 0.0)).r) / (2.0 * epsilon);
+    float dy = (texture(volume, pos + vec3(0.0, epsilon, 0.0)).r - texture(volume, pos - vec3(0.0, epsilon, 0.0)).r) / (2.0 * epsilon);
+    float dz = (texture(volume, pos + vec3(0.0, 0.0, epsilon)).r - texture(volume, pos - vec3(0.0, 0.0, epsilon)).r) / (2.0 * epsilon);
+    return normalize(vec3(dx, dy, dz));
+}
 void main() {
     vec3 rayDir = normalize(vDir);
     vec2 bounds = intersect_box(vEye, rayDir);
@@ -86,9 +87,8 @@ void main() {
             if (density > iso_values[i] && iso_values[i] > prev_value) {
                 vec3 intersection_point = mix(prev_pos, pos, (iso_values[i] - prev_value) / (density - prev_value));
 
-                // get gradients and use them as normals
-                vec4 gradient_vec = texture(gradient, intersection_point + 0.5);
-                vec3 normal = normalize(gradient_vec.rgb);
+
+                vec3 normal = compute_gradient(intersection_point + 0.5);
 
 
 

@@ -24,7 +24,7 @@ let firstHitShader = null;
 let cursor_x;
 let cursor_y;
 
-
+const MAX_LAYERS = 3;
 let isoValues = [0.5, -1, -1]; // Example iso-values
 let surfaceColors = [new THREE.Vector3(1, 1, 1), new THREE.Vector3(1, 1, 1), new THREE.Vector3(1, 1, 1)];
 let opacities = [1.0, -1, -1]; // Example opacities
@@ -85,7 +85,7 @@ function hexToRgb(hex) {
     hex = hex.replace(/^#/, '');
 
     // Convert 3-digit hex to 6-digit hex
-    if (hex.length === 3) {
+    if (hex.length === MAX_LAYERS) {
         hex = hex.split('').map(hexChar => hexChar + hexChar).join('');
     }
 
@@ -111,7 +111,7 @@ async function readFile() {
 
         // set shader data
         firstHitShader.setVolume(volume);
-        firstHitShader.setSteps(200);
+        firstHitShader.setSteps(500);
 
         resetVis();
     };
@@ -214,7 +214,7 @@ function generateHistogram(voxels) {
 
                 cursor_x = line.node().getAttribute("x1") / adjWidth;
                 cursor_y = line.node().getAttribute("y1") / (adjHeight) * -1 + 1;
-                if (layerIndex !== 3) {
+                if (layerIndex !== MAX_LAYERS) {
                     isoValues[layerIndex] = cursor_x;
                     opacities[layerIndex] = cursor_y;
                     firstHitShader.setUniform("iso_values", isoValues);
@@ -303,7 +303,7 @@ function generateHistogram(voxels) {
 
 function buttonpress() {
     document.getElementById('saveButton').addEventListener("click", function () {
-        if (layerIndex === 3) {
+        if (layerIndex === MAX_LAYERS) {
             return;
         }
         updateValuesIfNeed();
@@ -319,13 +319,14 @@ function buttonPressDelete() {
             return;
         }
         layerIndex--;
-        for (let i = layerIndex; i < 3; i++) {
+        for (let i = layerIndex; i < MAX_LAYERS; i++) {
             isoValues[i] = -1;
             opacities[i] = -1;
             surfaceColors[i] = new THREE.Vector3(1, 1, 1);
         }
         document.getElementById('surfaceColor').value = '#ffffff';
         updateLineAndCircle();
+        paint();
     })
 }
 
