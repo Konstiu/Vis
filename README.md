@@ -21,6 +21,11 @@ This deletes the last layer you persisted.
 
 **Human Head:** (skull: white, full opaque; skin: yellow, semi transparent)
 <br>
+![image](https://github.com/user-attachments/assets/f5d36e54-a026-4316-bafa-3a0b54c7b552)
+
 
 **Beetle:**
 <br>
+![image](https://github.com/user-attachments/assets/5e050a84-2a60-4fdf-bd24-3a5dbd2fb054)
+
+
